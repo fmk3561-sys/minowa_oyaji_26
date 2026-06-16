@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>水鉄砲シューティング！</title>
+<title>おやじの水鉄砲シューティング</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #87CEEB;
+    background: #1a1a2e;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -17,11 +17,126 @@
     font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
     touch-action: none;
   }
+
+  /* ===== スタート画面 ===== */
+  #start-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(160deg, #0077b6 0%, #00b4d8 45%, #90e0ef 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 0;
+    overflow: hidden;
+  }
+  #start-screen.hidden { display: none; }
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    animation: rise linear infinite;
+    pointer-events: none;
+  }
+  @keyframes rise {
+    0%   { transform: translateY(0) scale(1);       opacity: 0.7; }
+    100% { transform: translateY(-110vh) scale(1.4); opacity: 0;   }
+  }
+
+  /* 揺れるアイコン行 */
+  .lantern-row {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 14px;
+    animation: sway 2s ease-in-out infinite alternate;
+  }
+  @keyframes sway {
+    from { transform: rotate(-4deg); }
+    to   { transform: rotate(4deg); }
+  }
+  .lantern { font-size: 36px; }
+
+  .start-title {
+    font-size: clamp(22px, 6vw, 38px);
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(0,180,255,0.8), 2px 2px 0 #0077b6;
+    text-align: center;
+    padding: 0 16px;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+  }
+  .start-subtitle {
+    font-size: clamp(11px, 3vw, 16px);
+    color: rgba(255,255,255,0.85);
+    text-align: center;
+    padding: 0 24px;
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+
+  /* キャラプレビュー */
+  .char-preview {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 12px;
+  }
+  .char-preview canvas {
+    width: 52px;
+    height: 52px;
+    border: 2px solid rgba(255,255,255,0.7);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    image-rendering: pixelated;
+  }
+
+  /* 操作説明 */
+  .how-to {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 14px;
+    padding: 14px 22px;
+    margin-bottom: 26px;
+    text-align: left;
+    max-width: 340px;
+    width: calc(100% - 40px);
+  }
+  .how-to p {
+    color: #fff;
+    font-size: clamp(11px, 2.8vw, 14px);
+    line-height: 1.9;
+  }
+  .how-to strong { color: #FFE57F; }
+
+  #start-btn {
+    background: linear-gradient(135deg, #ffffff, #b3e5fc);
+    color: #0077b6;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 52px;
+    font-size: clamp(18px, 5vw, 26px);
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 0 30px rgba(255,255,255,0.5), 0 6px 20px rgba(0,0,0,0.2);
+    animation: pulse-btn 1.5s ease-in-out infinite alternate;
+    letter-spacing: 2px;
+  }
+  @keyframes pulse-btn {
+    from { box-shadow: 0 0 20px rgba(255,255,255,0.4), 0 6px 20px rgba(0,0,0,0.2); transform: scale(1); }
+    to   { box-shadow: 0 0 40px rgba(255,255,255,0.9), 0 6px 20px rgba(0,0,0,0.2); transform: scale(1.04); }
+  }
+  #start-btn:active { transform: scale(0.95); }
+
+  /* ===== ゲームUI ===== */
   #ui {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
+    top: 10px; left: 10px; right: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -33,31 +148,29 @@
     border: 3px solid #2196F3;
     border-radius: 12px;
     padding: 6px 14px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #1565C0;
+    font-size: 18px; font-weight: bold; color: #1565C0;
   }
   #timer-box {
     background: rgba(255,255,255,0.85);
     border: 3px solid #FF5722;
     border-radius: 12px;
     padding: 6px 14px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #BF360C;
+    font-size: 18px; font-weight: bold; color: #BF360C;
   }
-  canvas {
+  canvas#canvas {
     display: block;
     cursor: crosshair;
     border: 4px solid #1565C0;
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   }
+
+  /* ===== クリア画面 ===== */
   #overlay {
     display: none;
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.55);
+    background: rgba(0,0,0,0.6);
     z-index: 20;
     align-items: center;
     justify-content: center;
@@ -67,61 +180,71 @@
     background: linear-gradient(135deg, #fff9c4, #ffe082);
     border: 5px solid #FF9800;
     border-radius: 24px;
-    padding: 36px 48px;
+    padding: 30px 40px;
     text-align: center;
     box-shadow: 0 12px 40px rgba(0,0,0,0.4);
     animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    max-width: 90vw;
   }
   @keyframes pop {
     from { transform: scale(0.3); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    to   { transform: scale(1); opacity: 1; }
   }
-  #overlay-box h1 {
-    font-size: 48px;
-    color: #E65100;
-    text-shadow: 2px 2px 0 #FF9800;
-    margin-bottom: 12px;
-  }
-  #overlay-box p {
-    font-size: 20px;
-    color: #37474F;
-    margin-bottom: 24px;
-  }
-  #restart-btn {
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 14px 36px;
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: inherit;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    transition: transform 0.1s;
-  }
-  #restart-btn:active { transform: scale(0.95); }
+  #overlay-box h1 { font-size: 48px; color: #E65100; text-shadow: 2px 2px 0 #FF9800; margin-bottom: 8px; }
+  #overlay-box p  { font-size: 18px; color: #37474F; margin-bottom: 16px; }
   #enemy-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    max-width: 320px;
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 8px; margin-bottom: 20px; max-width: 320px;
   }
   .enemy-badge {
     background: rgba(255,255,255,0.8);
     border: 2px solid #FF9800;
     border-radius: 20px;
     padding: 4px 12px;
-    font-size: 14px;
-    color: #4A148C;
-    font-weight: bold;
+    font-size: 13px; color: #4A148C; font-weight: bold;
   }
+  #restart-btn {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white; border: none; border-radius: 50px;
+    padding: 14px 36px; font-size: 20px; font-weight: bold;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+  }
+  #restart-btn:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
 
+<!-- ===== スタート画面 ===== -->
+<div id="start-screen">
+  <!-- 背景の泡（JSで生成） -->
+  <div id="bubbles"></div>
+
+  <div class="lantern-row">
+    <span class="lantern">💦</span>
+    <span class="lantern">🔫</span>
+    <span class="lantern">💦</span>
+  </div>
+  <div class="start-title">おやじの水鉄砲<br>シューティング！</div>
+  <div class="start-subtitle">〜 肝試しのラスボスたちへの挑戦 〜</div>
+
+  <!-- キャラ画像プレビュー (canvasで描画) -->
+  <div class="char-preview" id="char-preview"></div>
+
+  <div class="how-to">
+    <p>
+      💦 <strong>タップ</strong> した方向に水を発射！<br>
+      💣 たまに <strong>水風船爆弾</strong> が飛ぶ！(範囲ダメージ)<br>
+      🔁 壁 (左右) に当たると <strong>反射</strong> するぞ！<br>
+      👾 敵を <strong>全員</strong> やっつけたらクリア！
+    </p>
+  </div>
+
+  <button id="start-btn" onclick="startGame()">🔫 はじめる！</button>
+</div>
+
+<!-- ===== ゲームUI ===== -->
 <div id="ui">
   <div id="score-box">👾 残り: <span id="remain">0</span></div>
   <div id="timer-box">⏱ <span id="timer">0.0</span>秒</div>
@@ -129,11 +252,12 @@
 
 <canvas id="canvas"></canvas>
 
+<!-- ===== クリア画面 ===== -->
 <div id="overlay">
   <div id="overlay-box">
     <h1>🎉 クリア！</h1>
     <p id="clear-time"></p>
-    <p style="font-size:16px;color:#555;margin-bottom:8px;">たおした てき：</p>
+    <p style="font-size:14px;color:#555;margin-bottom:8px;">たおした てき：</p>
     <div id="enemy-list"></div>
     <button id="restart-btn" onclick="restartGame()">もう1度あそぶ！</button>
   </div>
@@ -145,68 +269,53 @@
 // ===== 効果音エンジン (Web Audio API) =====
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
-
-// ユーザー操作後に AudioContext を初期化する（自動再生ポリシー対策）
 function ensureAudio() {
   if (!audioCtx) audioCtx = new AudioCtx();
   if (audioCtx.state === "suspended") audioCtx.resume();
 }
-
-/**
- * シンプルな合成音を鳴らす汎用関数
- * @param {string} type  - オシレータ波形 "sine"|"square"|"sawtooth"|"triangle"
- * @param {number[]} freqs - 周波数の配列（順番に鳴らす）
- * @param {number} dur   - 1音あたりの長さ(秒)
- * @param {number} vol   - 音量 0〜1
- * @param {string} curve - "exp"=指数減衰 / "lin"=線形減衰
- */
 function playTone(type, freqs, dur, vol = 0.4, curve = "exp") {
   ensureAudio();
   const now = audioCtx.currentTime;
   freqs.forEach((freq, i) => {
-    const osc  = audioCtx.createOscillator();
+    const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    osc.connect(gain); gain.connect(audioCtx.destination);
     osc.type = type;
     osc.frequency.setValueAtTime(freq, now + i * dur);
     gain.gain.setValueAtTime(vol, now + i * dur);
-    if (curve === "exp") {
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * dur + dur);
-    } else {
-      gain.gain.linearRampToValueAtTime(0, now + i * dur + dur);
-    }
+    if (curve === "exp") gain.gain.exponentialRampToValueAtTime(0.001, now + i * dur + dur);
+    else                  gain.gain.linearRampToValueAtTime(0, now + i * dur + dur);
     osc.start(now + i * dur);
     osc.stop(now + i * dur + dur + 0.02);
   });
 }
-
-// --- 個別の効果音 ---
-
-// ヒット音: 短い「ぱしゅっ」
-function soundHit() {
-  playTone("triangle", [300, 180], 0.06, 0.35, "exp");
+function soundHit()    { playTone("triangle", [300, 180], 0.06, 0.35, "exp"); }
+function soundDefeat() { playTone("square", [440, 330, 220, 110], 0.07, 0.5, "exp"); }
+function soundBomb() {
+  // 爆発音: ノイズっぽい低音バースト
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  [80, 60, 40].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(freq + i * 20, now);
+    osc.frequency.exponentialRampToValueAtTime(20, now + 0.3);
+    gain.gain.setValueAtTime(0.6, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.start(now + i * 0.01);
+    osc.stop(now + 0.4);
+  });
 }
-
-// 撃破音: 「ドン！」っぽい下降音
-function soundDefeat() {
-  playTone("square", [440, 330, 220, 110], 0.07, 0.5, "exp");
-}
-
-// クリア音: 明るい上昇ファンファーレ
 function soundClear() {
   ensureAudio();
-  // メロディ
-  const melody = [
-    [523, 0.00], [659, 0.12], [784, 0.24],
-    [1047,0.36], [784, 0.52], [1047,0.60]
-  ];
+  const melody = [[523,0.00],[659,0.12],[784,0.24],[1047,0.36],[784,0.52],[1047,0.60]];
   const now = audioCtx.currentTime;
   melody.forEach(([freq, delay]) => {
-    const osc  = audioCtx.createOscillator();
+    const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    osc.connect(gain); gain.connect(audioCtx.destination);
     osc.type = "triangle";
     osc.frequency.setValueAtTime(freq, now + delay);
     gain.gain.setValueAtTime(0.5, now + delay);
@@ -230,7 +339,6 @@ const ENEMY_IMAGES = {
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-// レスポンシブ: ウィンドウに合わせてキャンバスサイズを決める
 function resize() {
   const maxW = Math.min(window.innerWidth - 8, 600);
   const maxH = Math.min(window.innerHeight - 70, 800);
@@ -238,26 +346,42 @@ function resize() {
   canvas.height = maxH;
 }
 resize();
-window.addEventListener("resize", () => { resize(); if (!gameOver) spawnEnemies(); });
+window.addEventListener("resize", () => { resize(); });
 
 // ===== 定数 =====
-const PLAYER_Y_RATIO = 0.92;   // 発射位置は画面下92%
-const BULLET_SPEED  = 9;
-const BULLET_RADIUS = 5;
-const ENEMY_W  = 64;
-const ENEMY_H  = 64;
-const MAX_HP   = 3;
+const PLAYER_Y_RATIO  = 0.92;
+const BULLET_SPEED    = 9;
+const BULLET_RADIUS   = 5;
+const ENEMY_W         = 64;
+const ENEMY_H         = 64;
+const MAX_HP          = 5;          // ★難易度UP: HP増加 (3→5)
 const SPAWN_COUNT_MIN = 3;
 const SPAWN_COUNT_MAX = 5;
+const HIT_SHRINK      = 0.65;       // ★難易度UP: 当たり判定を65%に縮小
+const SIDE_REFLECT_DECAY = 0.7;     // ★難易度UP: 側面反射で攻撃力70%に減衰
+const BOMB_CHANCE     = 0.10;       // ★水風船爆弾の出現率10%
+const BOMB_RADIUS     = 80;         // 爆発範囲半径
+
+// 水風船の色（薄め・パステル）
+const BALLOON_COLORS = [
+  "#FF8FAB", "#FFB3C1",  // ピンク系
+  "#A0D8EF", "#80C9E0",  // 水色系
+  "#B5EAD7", "#9DE0C8",  // 薄緑系
+  "#FFD6A5", "#FFC07A",  // オレンジ系
+  "#C8B6FF", "#B09FFF",  // 紫系
+  "#FDFFB6", "#F6F989",  // 黄色系
+];
 
 // ===== ゲーム状態 =====
-let bullets = [];
-let enemies = [];
-let effects = [];    // ヒットエフェクト
-let gameOver = false;
+let bullets   = [];
+let bombs     = [];   // 水風船爆弾
+let enemies   = [];
+let effects   = [];
+let gameOver  = false;
+let gameActive = false; // スタート画面を抜けたか
 let startTime = null;
 let elapsedTime = 0;
-let animId = null;
+let animId    = null;
 
 // ===== 画像ロード =====
 const imgKeys = Object.keys(ENEMY_IMAGES);
@@ -272,136 +396,131 @@ function preloadImages(cb) {
       loadedCount++;
       if (loadedCount === imgKeys.length) cb();
     };
-    img.onerror = () => {
-      loadedCount++;
-      if (loadedCount === imgKeys.length) cb();
-    };
+    img.onerror = () => { loadedCount++; if (loadedCount === imgKeys.length) cb(); };
     img.src = ENEMY_IMAGES[key];
   });
 }
 
+// スタート画面のキャラプレビューを描画
+function buildCharPreview() {
+  const container = document.getElementById("char-preview");
+  imgKeys.forEach(key => {
+    const c = document.createElement("canvas");
+    c.width = 64; c.height = 64;
+    container.appendChild(c);
+    const img = loadedImgs[key];
+    if (img) c.getContext("2d").drawImage(img, 0, 0, 64, 64);
+  });
+}
+
 // ===== 移動パターン =====
-// 各パターンは update(enemy, dt) で enemy.x, enemy.y を更新する
 const MOVE_PATTERNS = [
   // 0: 左右往復
   {
-    init(e) { e.vx = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1.5); e.vy = 0; },
+    init(e) { e.vx = (Math.random()>0.5?1:-1)*(1+Math.random()*1.5); e.vy=0; },
     update(e) {
       e.x += e.vx;
-      if (e.x < 0) { e.x = 0; e.vx *= -1; }
-      if (e.x + ENEMY_W > canvas.width) { e.x = canvas.width - ENEMY_W; e.vx *= -1; }
+      if (e.x<0)                   { e.x=0;                    e.vx*=-1; }
+      if (e.x+ENEMY_W>canvas.width){ e.x=canvas.width-ENEMY_W; e.vx*=-1; }
     }
   },
   // 1: 上下往復
   {
-    init(e) { e.vy = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1.5); e.vx = 0; },
+    init(e) { e.vy=(Math.random()>0.5?1:-1)*(1+Math.random()*1.5); e.vx=0; },
     update(e) {
       e.y += e.vy;
-      const minY = 50, maxY = canvas.height * 0.75 - ENEMY_H;
-      if (e.y < minY) { e.y = minY; e.vy *= -1; }
-      if (e.y > maxY) { e.y = maxY; e.vy *= -1; }
+      const minY=50, maxY=canvas.height*0.75-ENEMY_H;
+      if (e.y<minY){e.y=minY;e.vy*=-1;}
+      if (e.y>maxY){e.y=maxY;e.vy*=-1;}
     }
   },
-  // 2: ランダム移動（少しずつ向きを変える）
+  // 2: ランダム
   {
     init(e) {
-      const angle = Math.random() * Math.PI * 2;
-      const sp = 1.2 + Math.random() * 1.5;
-      e.vx = Math.cos(angle) * sp;
-      e.vy = Math.sin(angle) * sp;
-      e.turnTimer = 0;
-      e.turnInterval = 60 + Math.random() * 80;
+      const a=Math.random()*Math.PI*2, sp=1.2+Math.random()*1.5;
+      e.vx=Math.cos(a)*sp; e.vy=Math.sin(a)*sp;
+      e.turnTimer=0; e.turnInterval=60+Math.random()*80;
     },
     update(e) {
       e.turnTimer++;
-      if (e.turnTimer > e.turnInterval) {
-        const angle = Math.random() * Math.PI * 2;
-        const sp = 1.2 + Math.random() * 1.5;
-        e.vx = Math.cos(angle) * sp;
-        e.vy = Math.sin(angle) * sp;
-        e.turnTimer = 0;
-        e.turnInterval = 60 + Math.random() * 80;
+      if (e.turnTimer>e.turnInterval) {
+        const a=Math.random()*Math.PI*2, sp=1.2+Math.random()*1.5;
+        e.vx=Math.cos(a)*sp; e.vy=Math.sin(a)*sp;
+        e.turnTimer=0; e.turnInterval=60+Math.random()*80;
       }
-      e.x += e.vx;
-      e.y += e.vy;
-      const minY = 50, maxY = canvas.height * 0.75 - ENEMY_H;
-      if (e.x < 0) { e.x = 0; e.vx *= -1; }
-      if (e.x + ENEMY_W > canvas.width) { e.x = canvas.width - ENEMY_W; e.vx *= -1; }
-      if (e.y < minY) { e.y = minY; e.vy *= -1; }
-      if (e.y > maxY) { e.y = maxY; e.vy *= -1; }
+      e.x+=e.vx; e.y+=e.vy;
+      const minY=50, maxY=canvas.height*0.75-ENEMY_H;
+      if(e.x<0){e.x=0;e.vx*=-1;} if(e.x+ENEMY_W>canvas.width){e.x=canvas.width-ENEMY_W;e.vx*=-1;}
+      if(e.y<minY){e.y=minY;e.vy*=-1;} if(e.y>maxY){e.y=maxY;e.vy*=-1;}
     }
   },
   // 3: 円運動
   {
     init(e) {
-      e.cx = e.x + ENEMY_W / 2;
-      e.cy = e.y + ENEMY_H / 2;
-      e.radius = 40 + Math.random() * 40;
-      e.angle = Math.random() * Math.PI * 2;
-      e.speed = (0.03 + Math.random() * 0.03) * (Math.random() > 0.5 ? 1 : -1);
+      e.cx=e.x+ENEMY_W/2; e.cy=e.y+ENEMY_H/2;
+      e.radius=40+Math.random()*40;
+      e.angle=Math.random()*Math.PI*2;
+      e.speed=(0.03+Math.random()*0.03)*(Math.random()>0.5?1:-1);
     },
     update(e) {
-      e.angle += e.speed;
-      const nx = e.cx + Math.cos(e.angle) * e.radius - ENEMY_W / 2;
-      const ny = e.cy + Math.sin(e.angle) * e.radius - ENEMY_H / 2;
-      const minY = 50, maxY = canvas.height * 0.75 - ENEMY_H;
-      e.x = Math.max(0, Math.min(canvas.width - ENEMY_W, nx));
-      e.y = Math.max(minY, Math.min(maxY, ny));
+      e.angle+=e.speed;
+      const nx=e.cx+Math.cos(e.angle)*e.radius-ENEMY_W/2;
+      const ny=e.cy+Math.sin(e.angle)*e.radius-ENEMY_H/2;
+      const minY=50, maxY=canvas.height*0.75-ENEMY_H;
+      e.x=Math.max(0,Math.min(canvas.width-ENEMY_W,nx));
+      e.y=Math.max(minY,Math.min(maxY,ny));
     }
   },
   // 4: ジグザグ
   {
     init(e) {
-      e.vx = (Math.random() > 0.5 ? 1 : -1) * (1.5 + Math.random());
-      e.vy = (1 + Math.random()) * (Math.random() > 0.5 ? 1 : -1);
-      e.zigTimer = 0;
+      e.vx=(Math.random()>0.5?1:-1)*(1.5+Math.random());
+      e.vy=(1+Math.random())*(Math.random()>0.5?1:-1);
+      e.zigTimer=0;
     },
     update(e) {
       e.zigTimer++;
-      if (e.zigTimer % 40 === 0) e.vy *= -1;
-      e.x += e.vx;
-      e.y += e.vy;
-      const minY = 50, maxY = canvas.height * 0.75 - ENEMY_H;
-      if (e.x < 0) { e.x = 0; e.vx *= -1; }
-      if (e.x + ENEMY_W > canvas.width) { e.x = canvas.width - ENEMY_W; e.vx *= -1; }
-      if (e.y < minY) { e.y = minY; e.vy *= -1; }
-      if (e.y > maxY) { e.y = maxY; e.vy *= -1; }
+      if(e.zigTimer%40===0) e.vy*=-1;
+      e.x+=e.vx; e.y+=e.vy;
+      const minY=50, maxY=canvas.height*0.75-ENEMY_H;
+      if(e.x<0){e.x=0;e.vx*=-1;} if(e.x+ENEMY_W>canvas.width){e.x=canvas.width-ENEMY_W;e.vx*=-1;}
+      if(e.y<minY){e.y=minY;e.vy*=-1;} if(e.y>maxY){e.y=maxY;e.vy*=-1;}
     }
   },
 ];
 
 // ===== 敵の種類定義 =====
 const ENEMY_TYPES = [
-  { key: "goblin",   name: "ゴブリン",   pattern: 0 },
-  { key: "zombie",   name: "ゾンビ",     pattern: 1 },
-  { key: "krampus",  name: "クランプス", pattern: 3 },
-  { key: "jiangshi", name: "キョンシー", pattern: 4 },
-  { key: "pharaoh",  name: "ファラオ",   pattern: 2 },
-  { key: "demon",    name: "みのわどうじ",pattern: 0 },
+  { key:"goblin",   name:"ゴブリン",    pattern:0 },
+  { key:"zombie",   name:"ゾンビ",      pattern:1 },
+  { key:"krampus",  name:"クランプス",  pattern:3 },
+  { key:"jiangshi", name:"キョンシー",  pattern:4 },
+  { key:"pharaoh",  name:"ファラオ",    pattern:2 },
+  { key:"demon",    name:"みのわどうじ",pattern:0 },
 ];
+
+const KEY_TO_FILENAME = {
+  goblin:"大耳輪", zombie:"斧おやじ", krampus:"クランプス",
+  jiangshi:"ジャンシー", pharaoh:"ミノワール", demon:"みのわどうじ",
+};
 
 // ===== 敵スポーン =====
 function spawnEnemies() {
   enemies = [];
-  const count = SPAWN_COUNT_MIN + Math.floor(Math.random() * (SPAWN_COUNT_MAX - SPAWN_COUNT_MIN + 1));
-  // シャッフルして種類を選ぶ
-  const shuffled = [...ENEMY_TYPES].sort(() => Math.random() - 0.5);
-
-  for (let i = 0; i < count; i++) {
+  const count = SPAWN_COUNT_MIN + Math.floor(Math.random()*(SPAWN_COUNT_MAX-SPAWN_COUNT_MIN+1));
+  const shuffled = [...ENEMY_TYPES].sort(()=>Math.random()-0.5);
+  for (let i=0; i<count; i++) {
     const type = shuffled[i % shuffled.length];
     const pattern = MOVE_PATTERNS[type.pattern];
     const margin = 20;
     const e = {
-      x: margin + Math.random() * (canvas.width - ENEMY_W - margin * 2),
-      y: 60 + Math.random() * (canvas.height * 0.55),
+      x: margin + Math.random()*(canvas.width-ENEMY_W-margin*2),
+      y: 60 + Math.random()*(canvas.height*0.55),
       w: ENEMY_W, h: ENEMY_H,
-      hp: MAX_HP,
-      key: type.key,
-      name: type.name,
+      hp: MAX_HP, maxHp: MAX_HP,
+      key: type.key, name: type.name,
       patternId: type.pattern,
-      flash: 0,   // ヒット時の点滅フレーム数
-      dead: false,
-      vx: 0, vy: 0,
+      flash: 0, dead: false, vx:0, vy:0,
     };
     pattern.init(e);
     enemies.push(e);
@@ -414,203 +533,263 @@ const playerX = () => canvas.width / 2;
 const playerY = () => canvas.height * PLAYER_Y_RATIO;
 
 function shoot(tx, ty) {
-  ensureAudio();  // タップ時に AudioContext を起動
-  const px = playerX(), py = playerY();
-  const dx = tx - px, dy = ty - py;
-  const len = Math.sqrt(dx * dx + dy * dy);
-  if (len < 1) return;
+  ensureAudio();
+  const px=playerX(), py=playerY();
+  const dx=tx-px, dy=ty-py;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  if (len<1) return;
 
-  // 水らしく複数粒をバラけさせる
-  for (let i = 0; i < 3; i++) {
-    const scatter = (Math.random() - 0.5) * 0.15;
+  // ★ 10%の確率で水風船爆弾
+  if (Math.random() < BOMB_CHANCE) {
+    launchBomb(tx, ty, px, py, dx/len, dy/len);
+    return;
+  }
+
+  // 通常の水弾（複数粒）
+  for (let i=0; i<3; i++) {
+    const scatter=(Math.random()-0.5)*0.15;
     bullets.push({
-      x: px, y: py,
-      vx: (dx / len + scatter) * BULLET_SPEED,
-      vy: (dy / len + scatter * 0.5) * BULLET_SPEED,
-      r: BULLET_RADIUS - i,   // 粒の大きさ少し変える
-      trail: [],
+      x:px, y:py,
+      vx:(dx/len+scatter)*BULLET_SPEED,
+      vy:(dy/len+scatter*0.5)*BULLET_SPEED,
+      r: BULLET_RADIUS-i,
+      power: 1.0,   // ★ 攻撃力（反射で減衰）
+      trail:[],
     });
   }
 }
 
-// ===== 当たり判定 =====
+// ===== 水風船爆弾の発射 =====
+function launchBomb(tx, ty, px, py, nx, ny) {
+  const color = BALLOON_COLORS[Math.floor(Math.random()*BALLOON_COLORS.length)];
+  bombs.push({
+    x: px, y: py,
+    tx: tx, ty: ty,     // 目標位置
+    vx: nx*7, vy: ny*7,
+    r: 12,
+    color: color,
+    exploded: false,
+    trail: [],
+  });
+}
+
+// ===== 爆弾の爆発処理 =====
+function explodeBomb(bomb) {
+  bomb.exploded = true;
+  soundBomb();
+
+  // 範囲内の敵にダメージ
+  enemies.forEach(e => {
+    if (e.dead) return;
+    const ex = e.x + e.w/2, ey = e.y + e.h/2;
+    const dist = Math.hypot(bomb.x - ex, bomb.y - ey);
+    if (dist < BOMB_RADIUS + e.w/2) {
+      // 距離に応じてダメージ（近いほど大きい）
+      const dmg = dist < BOMB_RADIUS * 0.4 ? 2 : 1;
+      e.hp -= dmg;
+      e.flash = 14;
+      if (e.hp <= 0) {
+        e.dead = true;
+        soundDefeat();
+        spawnBigEffect(e.x+e.w/2, e.y+e.h/2, "#FF9800");
+      } else {
+        spawnEffect(e.x+e.w/2, e.y+e.h/2, bomb.color);
+      }
+    }
+  });
+
+  // 爆発エフェクト（大きな波紋 + 色付き飛沫）
+  for (let i=0; i<28; i++) {
+    const angle = Math.random()*Math.PI*2;
+    const speed = 3 + Math.random()*7;
+    effects.push({
+      x:bomb.x, y:bomb.y,
+      vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed,
+      r:8+Math.random()*10,
+      life:1.0,
+      color: bomb.color,
+      isBombSplash: true,
+    });
+  }
+  // 波紋（大きな円）
+  effects.push({
+    x:bomb.x, y:bomb.y, vx:0, vy:0,
+    r:BOMB_RADIUS, life:1.0,
+    color: bomb.color, isRing:true,
+  });
+}
+
+// ===== 通常弾の当たり判定 =====
 function checkHits() {
   for (let b of bullets) {
+    if (b.hit) continue;
     for (let e of enemies) {
       if (e.dead) continue;
-      if (b.x + b.r > e.x && b.x - b.r < e.x + e.w &&
-          b.y + b.r > e.y && b.y - b.r < e.y + e.h) {
-        // ヒット！
-        soundHit();  // 水ヒット音
+      // ★ 当たり判定を縮小（HIT_SHRINK倍）
+      const hw = e.w * HIT_SHRINK / 2, hh = e.h * HIT_SHRINK / 2;
+      const ecx = e.x + e.w/2, ecy = e.y + e.h/2;
+      if (b.x+b.r > ecx-hw && b.x-b.r < ecx+hw &&
+          b.y+b.r > ecy-hh && b.y-b.r < ecy+hh) {
+        soundHit();
         b.hit = true;
-        e.hp--;
-        e.flash = 12;
-        spawnEffect(e.x + e.w / 2, e.y + e.h / 2);
-
-        if (e.hp <= 0) {
-          e.dead = true;
-          soundDefeat();  // 撃破音
-          spawnBigEffect(e.x + e.w / 2, e.y + e.h / 2);
+        // ★ 攻撃力が残っていればダメージ
+        const actualDmg = b.power >= 0.5 ? 1 : 0;
+        if (actualDmg > 0) {
+          e.hp -= actualDmg;
+          e.flash = 12;
+          spawnEffect(e.x+e.w/2, e.y+e.h/2, "#29B6F6");
+          if (e.hp <= 0) {
+            e.dead = true;
+            soundDefeat();
+            spawnBigEffect(e.x+e.w/2, e.y+e.h/2, "#FF9800");
+          }
         }
       }
     }
   }
 }
 
-// ===== ヒットエフェクト =====
-function spawnEffect(x, y) {
-  for (let i = 0; i < 8; i++) {
-    const angle = (Math.PI * 2 / 8) * i;
+// ===== エフェクト生成 =====
+function spawnEffect(x, y, color) {
+  for (let i=0; i<8; i++) {
+    const angle=(Math.PI*2/8)*i;
     effects.push({
       x, y,
-      vx: Math.cos(angle) * (2 + Math.random() * 3),
-      vy: Math.sin(angle) * (2 + Math.random() * 3),
-      r: 4 + Math.random() * 4,
-      life: 1.0,
-      big: false,
+      vx:Math.cos(angle)*(2+Math.random()*3),
+      vy:Math.sin(angle)*(2+Math.random()*3),
+      r:4+Math.random()*4, life:1.0, color,
     });
   }
 }
-function spawnBigEffect(x, y) {
-  for (let i = 0; i < 20; i++) {
-    const angle = Math.random() * Math.PI * 2;
+function spawnBigEffect(x, y, color) {
+  for (let i=0; i<20; i++) {
+    const angle=Math.random()*Math.PI*2;
     effects.push({
       x, y,
-      vx: Math.cos(angle) * (3 + Math.random() * 5),
-      vy: Math.sin(angle) * (3 + Math.random() * 5),
-      r: 6 + Math.random() * 8,
-      life: 1.0,
-      big: true,
+      vx:Math.cos(angle)*(3+Math.random()*5),
+      vy:Math.sin(angle)*(3+Math.random()*5),
+      r:6+Math.random()*8, life:1.0, color, big:true,
     });
   }
 }
 
 // ===== 壁反射 =====
 function reflectBullet(b) {
-  if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx); }
-  if (b.x + b.r > canvas.width) { b.x = canvas.width - b.r; b.vx = -Math.abs(b.vx); }
-  if (b.y - b.r < 0) { b.y = b.r; b.vy = Math.abs(b.vy); }
-  // 画面下（プレイヤー以下）に出たら削除
-  if (b.y - b.r > canvas.height) b.hit = true;
+  // ★ 左右の壁: 反射するが攻撃力が減衰する
+  if (b.x-b.r < 0) {
+    b.x = b.r; b.vx = Math.abs(b.vx);
+    b.power *= SIDE_REFLECT_DECAY;
+  }
+  if (b.x+b.r > canvas.width) {
+    b.x = canvas.width-b.r; b.vx = -Math.abs(b.vx);
+    b.power *= SIDE_REFLECT_DECAY;
+  }
+  // ★ 上の壁: 反射せず消滅
+  if (b.y-b.r < 0) {
+    b.hit = true;
+    return;
+  }
+  // 画面下は消滅
+  if (b.y-b.r > canvas.height) b.hit = true;
 }
 
 // ===== 描画 =====
 function drawBackground() {
-  // 空のグラデーション
-  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  grad.addColorStop(0, "#87CEEB");
-  grad.addColorStop(0.7, "#B0E0FF");
-  grad.addColorStop(1, "#E8F8FF");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const grad = ctx.createLinearGradient(0,0,0,canvas.height);
+  grad.addColorStop(0,"#87CEEB"); grad.addColorStop(0.7,"#B0E0FF"); grad.addColorStop(1,"#E8F8FF");
+  ctx.fillStyle=grad; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // 雲もどき（シンプルな円）
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  [[80,40,30],[200,60,20],[canvas.width-100,35,25],[canvas.width-50,55,18]].forEach(([cx,cy,r]) => {
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx+20, cy+5, r*0.7, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx-15, cy+8, r*0.6, 0, Math.PI*2);
-    ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,0.6)";
+  [[80,40,30],[200,60,20],[canvas.width-100,35,25],[canvas.width-50,55,18]].forEach(([cx,cy,r])=>{
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+20,cy+5,r*0.7,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx-15,cy+8,r*0.6,0,Math.PI*2); ctx.fill();
   });
 
-  // 地面ライン
-  ctx.fillStyle = "#4CAF50";
-  ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
+  ctx.fillStyle="#4CAF50"; ctx.fillRect(0,canvas.height-10,canvas.width,10);
 }
 
 function drawPlayer() {
-  const px = playerX(), py = playerY();
-  // ノズル（水鉄砲の先）
+  const px=playerX(), py=playerY();
   ctx.save();
-  ctx.fillStyle = "#FF6F00";
-  ctx.beginPath();
-  ctx.arc(px, py, 14, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#E65100";
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  // 中心の丸
-  ctx.fillStyle = "#FFF";
-  ctx.beginPath();
-  ctx.arc(px, py, 5, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle="#FF6F00";
+  ctx.beginPath(); ctx.arc(px,py,14,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle="#E65100"; ctx.lineWidth=3; ctx.stroke();
+  ctx.fillStyle="#FFF"; ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
   ctx.restore();
-
-  // 水鉄砲ラベル
   ctx.save();
-  ctx.font = "bold 12px sans-serif";
-  ctx.fillStyle = "#1565C0";
-  ctx.textAlign = "center";
-  ctx.fillText("💦", px, py + 30);
+  ctx.font="bold 14px sans-serif"; ctx.fillStyle="#1565C0"; ctx.textAlign="center";
+  ctx.fillText("💦", px, py+30);
   ctx.restore();
 }
 
 function drawEnemy(e) {
   if (e.dead) return;
   ctx.save();
-
-  // ヒット点滅
-  if (e.flash > 0) {
-    ctx.globalAlpha = (e.flash % 4 < 2) ? 0.4 : 1.0;
-    e.flash--;
+  if (e.flash>0) { ctx.globalAlpha=(e.flash%4<2)?0.4:1.0; e.flash--; }
+  const img=loadedImgs[e.key];
+  if (img) { ctx.drawImage(img,e.x,e.y,e.w,e.h); }
+  else {
+    ctx.fillStyle="#FF5722"; ctx.fillRect(e.x,e.y,e.w,e.h);
+    ctx.fillStyle="#FFF"; ctx.font="12px sans-serif"; ctx.textAlign="center";
+    ctx.fillText(e.name,e.x+e.w/2,e.y+e.h/2);
   }
-
-  const img = loadedImgs[e.key];
-  if (img) {
-    ctx.drawImage(img, e.x, e.y, e.w, e.h);
-  } else {
-    // フォールバック（画像なし）
-    ctx.fillStyle = "#FF5722";
-    ctx.fillRect(e.x, e.y, e.w, e.h);
-    ctx.fillStyle = "#FFF";
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(e.name, e.x + e.w/2, e.y + e.h/2);
-  }
-
   ctx.restore();
 
   // HPバー
-  const barW = e.w, barH = 6;
-  const bx = e.x, by = e.y - 10;
-  ctx.fillStyle = "#333";
-  ctx.fillRect(bx, by, barW, barH);
-  const hpColor = e.hp === 3 ? "#4CAF50" : e.hp === 2 ? "#FF9800" : "#F44336";
-  ctx.fillStyle = hpColor;
-  ctx.fillRect(bx, by, barW * (e.hp / MAX_HP), barH);
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(bx, by, barW, barH);
+  const barW=e.w, barH=7, bx=e.x, by=e.y-12;
+  ctx.fillStyle="#333"; ctx.fillRect(bx,by,barW,barH);
+  const ratio=Math.max(0,e.hp/e.maxHp);
+  const hpColor=ratio>0.6?"#4CAF50":ratio>0.3?"#FF9800":"#F44336";
+  ctx.fillStyle=hpColor; ctx.fillRect(bx,by,barW*ratio,barH);
+  ctx.strokeStyle="#000"; ctx.lineWidth=1; ctx.strokeRect(bx,by,barW,barH);
 }
 
 function drawBullets() {
   bullets.forEach(b => {
     // 軌跡
-    if (b.trail.length > 1) {
-      ctx.beginPath();
-      ctx.moveTo(b.trail[0].x, b.trail[0].y);
-      for (let i = 1; i < b.trail.length; i++) {
-        ctx.lineTo(b.trail[i].x, b.trail[i].y);
-      }
-      ctx.strokeStyle = "rgba(100,180,255,0.5)";
-      ctx.lineWidth = b.r;
-      ctx.lineCap = "round";
-      ctx.stroke();
+    if (b.trail.length>1) {
+      ctx.beginPath(); ctx.moveTo(b.trail[0].x,b.trail[0].y);
+      for(let i=1;i<b.trail.length;i++) ctx.lineTo(b.trail[i].x,b.trail[i].y);
+      // ★ 攻撃力に応じて色を変える（弱くなると薄くなる）
+      const alpha = 0.3 + b.power * 0.4;
+      ctx.strokeStyle=`rgba(100,180,255,${alpha})`;
+      ctx.lineWidth=b.r; ctx.lineCap="round"; ctx.stroke();
     }
-    // 水の粒
+    // 水の粒（攻撃力が落ちると色が薄くなる）
     ctx.save();
-    const grad = ctx.createRadialGradient(b.x - b.r*0.3, b.y - b.r*0.3, 1, b.x, b.y, b.r);
-    grad.addColorStop(0, "#E3F2FD");
-    grad.addColorStop(1, "#2196F3");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    const g=ctx.createRadialGradient(b.x-b.r*0.3,b.y-b.r*0.3,1,b.x,b.y,b.r);
+    g.addColorStop(0,"#E3F2FD"); g.addColorStop(1,`rgba(33,150,243,${0.4+b.power*0.6})`);
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawBombs() {
+  bombs.forEach(bomb => {
+    if (bomb.exploded) return;
+    // 軌跡
+    if (bomb.trail.length>1) {
+      ctx.beginPath(); ctx.moveTo(bomb.trail[0].x,bomb.trail[0].y);
+      for(let i=1;i<bomb.trail.length;i++) ctx.lineTo(bomb.trail[i].x,bomb.trail[i].y);
+      ctx.strokeStyle="rgba(200,180,255,0.4)"; ctx.lineWidth=3; ctx.lineCap="round"; ctx.stroke();
+    }
+    // 風船本体
+    ctx.save();
+    ctx.beginPath(); ctx.arc(bomb.x,bomb.y,bomb.r,0,Math.PI*2);
+    ctx.fillStyle=bomb.color;
+    ctx.globalAlpha=0.85;
     ctx.fill();
+    ctx.strokeStyle="rgba(0,0,0,0.2)"; ctx.lineWidth=2; ctx.stroke();
+    // ハイライト
+    ctx.fillStyle="rgba(255,255,255,0.5)";
+    ctx.beginPath(); ctx.arc(bomb.x-bomb.r*0.3,bomb.y-bomb.r*0.3,bomb.r*0.3,0,Math.PI*2); ctx.fill();
+    // ひも
+    ctx.strokeStyle="rgba(80,80,80,0.6)"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(bomb.x,bomb.y+bomb.r);
+    ctx.quadraticCurveTo(bomb.x+5,bomb.y+bomb.r+6,bomb.x+2,bomb.y+bomb.r+12);
+    ctx.stroke();
     ctx.restore();
   });
 }
@@ -618,161 +797,165 @@ function drawBullets() {
 function drawEffects() {
   effects.forEach(ef => {
     ctx.save();
-    ctx.globalAlpha = ef.life;
-    ctx.fillStyle = ef.big ? "#FF9800" : "#29B6F6";
-    ctx.beginPath();
-    ctx.arc(ef.x, ef.y, ef.r * ef.life, 0, Math.PI * 2);
-    ctx.fill();
+    if (ef.isRing) {
+      // 波紋リング
+      ctx.globalAlpha=ef.life*0.5;
+      ctx.strokeStyle=ef.color;
+      ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(ef.x,ef.y,ef.r*(1.5-ef.life),0,Math.PI*2); ctx.stroke();
+    } else {
+      ctx.globalAlpha=ef.life;
+      ctx.fillStyle=ef.color||"#29B6F6";
+      ctx.beginPath(); ctx.arc(ef.x,ef.y,ef.r*ef.life,0,Math.PI*2); ctx.fill();
+    }
     ctx.restore();
   });
 }
 
 // ===== メインループ =====
-let lastTime = 0;
+let lastTime=0;
 function loop(ts) {
-  if (gameOver) return;
-  const dt = ts - lastTime;
-  lastTime = ts;
+  if (gameOver||!gameActive) return;
+  const dt=ts-lastTime; lastTime=ts;
 
-  // タイマー更新
-  if (startTime !== null) {
-    elapsedTime = (ts - startTime) / 1000;
-    document.getElementById("timer").textContent = elapsedTime.toFixed(1);
+  if (startTime!==null) {
+    elapsedTime=(ts-startTime)/1000;
+    document.getElementById("timer").textContent=elapsedTime.toFixed(1);
   }
 
   // --- 更新 ---
-  // 敵移動
-  enemies.forEach(e => {
-    if (!e.dead) MOVE_PATTERNS[e.patternId].update(e);
-  });
+  enemies.forEach(e => { if(!e.dead) MOVE_PATTERNS[e.patternId].update(e); });
 
-  // 弾移動 & 反射
+  // 通常弾
   bullets.forEach(b => {
-    b.trail.push({ x: b.x, y: b.y });
-    if (b.trail.length > 6) b.trail.shift();
-    b.x += b.vx;
-    b.y += b.vy;
+    b.trail.push({x:b.x,y:b.y});
+    if(b.trail.length>6) b.trail.shift();
+    b.x+=b.vx; b.y+=b.vy;
     reflectBullet(b);
   });
-
-  // 当たり判定
   checkHits();
+  bullets=bullets.filter(b=>!b.hit);
 
-  // 弾の削除
-  bullets = bullets.filter(b => !b.hit);
-
-  // エフェクト更新
-  effects.forEach(ef => {
-    ef.x += ef.vx;
-    ef.y += ef.vy;
-    ef.vx *= 0.9;
-    ef.vy *= 0.9;
-    ef.life -= 0.04;
+  // 爆弾
+  bombs.forEach(bomb => {
+    if (bomb.exploded) return;
+    bomb.trail.push({x:bomb.x,y:bomb.y});
+    if(bomb.trail.length>8) bomb.trail.shift();
+    bomb.x+=bomb.vx; bomb.y+=bomb.vy;
+    // 目標付近に到達したら爆発
+    const dist=Math.hypot(bomb.x-bomb.tx,bomb.y-bomb.ty);
+    if (dist < 14 || bomb.y > canvas.height || bomb.y < 0) {
+      explodeBomb(bomb);
+    }
   });
-  effects = effects.filter(ef => ef.life > 0);
+  bombs=bombs.filter(b=>!b.exploded);
 
-  // 残り敵カウント
-  const alive = enemies.filter(e => !e.dead).length;
-  document.getElementById("remain").textContent = alive;
+  // エフェクト
+  effects.forEach(ef => {
+    ef.x+=ef.vx; ef.y+=ef.vy; ef.vx*=0.9; ef.vy*=0.9;
+    ef.life -= ef.isRing ? 0.03 : 0.04;
+  });
+  effects=effects.filter(ef=>ef.life>0);
 
-  // クリア判定
-  if (alive === 0 && enemies.length > 0) {
-    gameOver = true;
-    soundClear();  // クリアファンファーレ
+  // カウント
+  const alive=enemies.filter(e=>!e.dead).length;
+  document.getElementById("remain").textContent=alive;
+
+  if (alive===0 && enemies.length>0) {
+    gameOver=true;
+    soundClear();
     showClear();
     return;
   }
 
   // --- 描画 ---
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   drawBackground();
   enemies.forEach(drawEnemy);
   drawBullets();
+  drawBombs();
   drawEffects();
   drawPlayer();
 
-  animId = requestAnimationFrame(loop);
+  animId=requestAnimationFrame(loop);
 }
 
 // ===== クリア画面 =====
-// ファイル名（拡張子なし）とキーの対応表
-const KEY_TO_FILENAME = {
-  goblin:   "大耳輪",
-  zombie:   "斧おやじ",
-  krampus:  "クランプス",
-  jiangshi: "ジャンシー",
-  pharaoh:  "ミノワール",
-  demon:    "みのわどうじ",
-};
-
 function showClear() {
-  const overlay  = document.getElementById("overlay");
-  const timeEl   = document.getElementById("clear-time");
-  const listEl   = document.getElementById("enemy-list");
-
-  timeEl.textContent = `クリアタイム: ${elapsedTime.toFixed(1)} 秒`;
-
-  // 倒した敵の名前一覧（ファイル名ベース、重複除去）
-  const defeated = [...new Set(enemies.map(e => KEY_TO_FILENAME[e.key] || e.key))];
-  listEl.innerHTML = defeated
-    .map(name => `<span class="enemy-badge">✨ ${name}</span>`)
-    .join("");
-
+  const overlay=document.getElementById("overlay");
+  document.getElementById("clear-time").textContent=`クリアタイム: ${elapsedTime.toFixed(1)} 秒`;
+  const defeated=[...new Set(enemies.map(e=>KEY_TO_FILENAME[e.key]||e.key))];
+  document.getElementById("enemy-list").innerHTML=
+    defeated.map(n=>`<span class="enemy-badge">✨ ${n}</span>`).join("");
   overlay.classList.add("show");
 }
 
-// ===== リスタート =====
+// ===== スタート =====
+function startGame() {
+  ensureAudio();
+  document.getElementById("start-screen").classList.add("hidden");
+  gameActive=true;
+  spawnEnemies();
+  lastTime=performance.now();
+  startTime=lastTime;
+  animId=requestAnimationFrame(loop);
+}
+
+// ===== リスタート → スタート画面へ戻る =====
 function restartGame() {
   document.getElementById("overlay").classList.remove("show");
-  bullets = [];
-  effects = [];
-  gameOver = false;
-  startTime = null;
-  elapsedTime = 0;
-  document.getElementById("timer").textContent = "0.0";
-  spawnEnemies();
-  lastTime = performance.now();
-  startTime = lastTime;
-  animId = requestAnimationFrame(loop);
+  bullets=[]; bombs=[]; effects=[];
+  gameOver=false; gameActive=false;
+  startTime=null; elapsedTime=0;
+  document.getElementById("timer").textContent="0.0";
+  // スタート画面を再表示
+  document.getElementById("start-screen").classList.remove("hidden");
 }
 
 // ===== 入力処理 =====
 function getCanvasPos(e) {
-  const rect = canvas.getBoundingClientRect();
-  let cx, cy;
-  if (e.touches) {
-    cx = e.touches[0].clientX - rect.left;
-    cy = e.touches[0].clientY - rect.top;
-  } else {
-    cx = e.clientX - rect.left;
-    cy = e.clientY - rect.top;
-  }
-  // キャンバスの実サイズとCSS表示サイズのスケールを補正
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  return { x: cx * scaleX, y: cy * scaleY };
+  const rect=canvas.getBoundingClientRect();
+  let cx,cy;
+  if(e.touches){cx=e.touches[0].clientX-rect.left;cy=e.touches[0].clientY-rect.top;}
+  else{cx=e.clientX-rect.left;cy=e.clientY-rect.top;}
+  const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+  return{x:cx*scaleX,y:cy*scaleY};
 }
 
 canvas.addEventListener("click", e => {
-  if (gameOver) return;
-  const pos = getCanvasPos(e);
-  if (startTime === null) startTime = performance.now();
-  shoot(pos.x, pos.y);
+  if(gameOver||!gameActive) return;
+  const pos=getCanvasPos(e);
+  if(startTime===null) startTime=performance.now();
+  shoot(pos.x,pos.y);
 });
-
 canvas.addEventListener("touchstart", e => {
   e.preventDefault();
-  if (gameOver) return;
-  const pos = getCanvasPos(e);
-  if (startTime === null) startTime = performance.now();
-  shoot(pos.x, pos.y);
-}, { passive: false });
+  if(gameOver||!gameActive) return;
+  const pos=getCanvasPos(e);
+  if(startTime===null) startTime=performance.now();
+  shoot(pos.x,pos.y);
+},{passive:false});
 
 // ===== 起動 =====
 preloadImages(() => {
-  spawnEnemies();
-  lastTime = performance.now();
-  animId = requestAnimationFrame(loop);
+  buildCharPreview();
+  // 泡の背景を生成
+  const bubbleContainer = document.getElementById("bubbles");
+  for (let i = 0; i < 18; i++) {
+    const b = document.createElement("div");
+    b.className = "bubble";
+    const size = 10 + Math.random() * 40;
+    b.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      bottom:${-size}px;
+      animation-duration:${4 + Math.random()*8}s;
+      animation-delay:${Math.random()*6}s;
+    `;
+    bubbleContainer.appendChild(b);
+  }
+  resize();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 });
 </script>
 </body>
