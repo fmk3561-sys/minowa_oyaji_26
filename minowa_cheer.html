@@ -1,0 +1,531 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>オールみのわフェスタ チアゲーム</title>
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+  background: #ffffff;
+  margin: 0; padding: 6px 4px; text-align: center;
+  color: #333;
+  font-size: 13px;
+  min-height: 100dvh;
+}
+h1 {
+  color: #e91e63; margin: 2px 0 4px; font-size: 17px;
+  border-bottom: 2px dotted #f8bbd0; padding-bottom: 3px;
+}
+
+/* 正解文字列エリア */
+#textDisplay {
+  font-size: 18px; letter-spacing: 2px; min-height: 28px; margin: 3px auto;
+  color: #d81b60; font-weight: bold; background: #fff5f8;
+  padding: 4px 8px; border-radius: 8px; display: inline-flex;
+  align-items: center; border: 2px solid #f8bbd0;
+  max-width: 96%;
+}
+.slot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 24px; border-bottom: 2px solid #f8bbd0;
+  margin: 0 1px;
+}
+.slot.done { border-bottom: 2px solid transparent; animation: pop 0.5s; }
+.slot svg { width: 18px; height: 18px; }
+@keyframes pop { 0%{transform:scale(0);} 60%{transform:scale(1.5);} 100%{transform:scale(1);} }
+
+/* 行 + 矢印 */
+.rowWrap { display: flex; justify-content: center; align-items: center; gap: 4px; margin: 3px auto; }
+.rowContent { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: nowrap; }
+.arrow {
+  font-size: 22px; color: #ff4081; width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+  font-weight: bold; text-shadow: 1px 1px 0 #fff; flex-shrink: 0;
+}
+.arrow.active { opacity: 1; animation: arrowBlink 0.6s infinite alternate; }
+@keyframes arrowBlink {
+  0% { transform: translateX(0); color: #ff4081; }
+  100% { transform: translateX(-6px); color: #ffb0d0; }
+}
+
+/* アイコン表示エリア */
+#iconArea { height: 40px; display: flex; justify-content: center; align-items: flex-end; gap: 8px; margin: 2px auto; }
+.iconSlot { width: 62px; height: 40px; display: flex; justify-content: center; align-items: center;
+  font-size: 32px; font-weight: bold;
+  text-shadow: -1.5px -1.5px 0 #222, 1.5px -1.5px 0 #222, -1.5px 1.5px 0 #222, 1.5px 1.5px 0 #222; }
+.iconSlot.active { animation: bounce 0.4s infinite alternate; }
+@keyframes bounce { 0%{transform:translateY(0);} 100%{transform:translateY(-6px);} }
+
+/* キャラエリア */
+#charArea { display: flex; justify-content: center; gap: 6px; min-height: 108px; }
+.char { width: 64px; height: 105px; cursor: pointer; position: relative;
+  border-radius: 8px; padding: 2px; border: 2px solid transparent; }
+.char svg { width: 100%; height: 100%; display: block; transition: transform 0.2s;
+  transform-origin: 50% 100%; }
+.char.selected { border-color: #ff4081; background: #fff5f8; }
+
+/* ★ チアダンスアニメ (キャラ自身が動く) */
+.char.cheer svg { animation: cheerDance 0.9s ease-in-out; }
+.char.droop svg { animation: droopAnim 0.5s; }
+@keyframes cheerDance {
+  0%   { transform: translateY(0)   rotate(0)   scale(1); }
+  15%  { transform: translateY(-8px) rotate(-8deg) scale(1.05); }
+  30%  { transform: translateY(-4px) rotate(8deg)  scale(1.05); }
+  45%  { transform: translateY(-20px) rotate(-5deg) scale(1.08); }
+  60%  { transform: translateY(-4px) rotate(6deg)  scale(1.05); }
+  75%  { transform: translateY(-10px) rotate(-6deg) scale(1.06); }
+  100% { transform: translateY(0)   rotate(0)    scale(1); }
+}
+@keyframes droopAnim { 0%{transform:translateY(0) rotate(0);} 50%{transform:translateY(10px) rotate(-18deg);} 100%{transform:translateY(0) rotate(0);} }
+
+.charBadge { position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%);
+  background: #ff4081; color: white; font-size: 9px; font-weight: bold;
+  padding: 1px 6px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+/* タイマー */
+#timer { height: 8px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px;
+  overflow: hidden; margin: 6px auto; max-width: 280px; }
+#timerBar { height: 100%; background: linear-gradient(90deg,#4caf50,#ffeb3b,#f44336); width: 0%; }
+
+/* カード */
+.cardRow { display: flex; justify-content: center; gap: 5px; flex-wrap: nowrap; }
+.card { width: 44px; height: 58px; border: 2px solid #999; border-radius: 6px; background: white;
+  display: flex; justify-content: center; align-items: center; font-size: 24px;
+  cursor: pointer; user-select: none; transition: transform 0.15s; flex-shrink: 0; }
+.card:hover { transform: translateY(-2px); }
+.card.selected { outline: 3px solid #ff4081; transform: translateY(-4px) scale(1.05); }
+.card.color { color: #fff; font-size: 10px; font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.6); border: 2px solid #333; }
+
+/* ルール */
+#rules { font-size: 11px; color: #333; background: #fafafa; padding: 6px 10px;
+  border-left: 3px solid #ff4081; border-radius: 3px; margin: 8px auto 4px;
+  max-width: 96%; text-align: left; line-height: 1.5; }
+#rules b { color: #e91e63; }
+#rules .head { font-size: 12px; color: #d81b60; }
+
+/* ボタン */
+#startBtn, #retryBtn {
+  font-size: 17px; padding: 9px 26px; background: #ff4081; color: white; border: none;
+  border-radius: 24px; cursor: pointer; margin: 6px; font-weight: bold;
+  box-shadow: 0 3px 0 #c2185b;
+}
+#startBtn:active, #retryBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 #c2185b; }
+
+/* オーバーレイ */
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none;
+  justify-content: center; align-items: center; z-index: 100; }
+#overlay.show { display: flex; }
+#overlayContent { background: white; padding: 20px 24px; border-radius: 16px;
+  text-align: center; max-width: 88%; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+#overlayContent h2 { color: #e91e63; margin: 0 0 8px; font-size: 18px; }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+  <h1>オールみのわフェスタ チアゲーム</h1>
+  <div id="textDisplay"></div>
+  <div id="iconArea"></div>
+
+  <div class="rowWrap">
+    <div id="charArea" class="rowContent"></div>
+    <div class="arrow" id="charArrow">&#9664;</div>
+  </div>
+
+  <div id="timer"><div id="timerBar"></div></div>
+
+  <div class="rowWrap">
+    <div id="suitRow" class="rowContent cardRow"></div>
+    <div class="arrow" id="suitArrow">&#9664;</div>
+  </div>
+  <div class="rowWrap">
+    <div id="colorRow" class="rowContent cardRow"></div>
+    <div class="arrow" id="colorArrow">&#9664;</div>
+  </div>
+
+  <div id="rules">
+    <div class="head"><b>あそびかた</b></div>
+    (1) キャラの頭上に「マーク」と「色」のアイコンが出るよ<br>
+    (2) 右の矢印が指す行から順に選ぼう(キャラ → マーク → 色)<br>
+    (3) <b>制限時間内</b>に3つ正しく選べたら正解！<br>
+    (4) 正解すると、上のエリアに1文字ずつ言葉が出るよ<br>
+    (5) 全問正解すると…すてきなサプライズ♪
+  </div>
+
+  <button id="startBtn">スタート！</button>
+  <div id="overlay"><div id="overlayContent"></div></div>
+
+<script>
+// ===== Config =====
+// ハートは表示時にSVG差し替えするため、内部データはプレースホルダ文字を使用
+const HEART_MARK = '\u2665'; // ? (U+2665) 一番互換性が高い
+const TARGET = 'みのわのみんなだいすきです' + HEART_MARK; // 14文字
+const CHARS_TEXT = [...TARGET];
+const SUITS = ['\u2660','\u2665','\u2666','\u2663'];
+const COLORS = [
+  { name:'ピンク',   value:'#ff4fa3' },
+  { name:'きいろ',   value:'#ffd83a' },
+  { name:'みずいろ', value:'#4fc3f7' },
+  { name:'きみどり', value:'#9ccc65' },
+];
+const TIME_LIMIT_MS = 4000;
+
+// ハートSVG (確実に表示される)
+const HEART_SVG = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+  '<path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z" ' +
+  'fill="#ff2e6a" stroke="#c2185b" stroke-width="1"/></svg>';
+
+// ===== SVG cheerleader =====
+function pom(x, y) {
+  return '<g transform="translate(' + x + ',' + y + ')">' +
+    '<circle r="10" fill="#ff69b4"/>' +
+    '<circle cx="-4" cy="-3" r="7" fill="#ff8dc7"/>' +
+    '<circle cx="4" cy="-2" r="7" fill="#ff8dc7"/>' +
+    '<circle cx="0" cy="4" r="7" fill="#ff1493"/>' +
+    '<circle cx="-2" cy="3" r="5" fill="#ffb6dc"/></g>';
+}
+function svgChar(pose) {
+  const hairColors = ['#3a1e0e','#5a3520','#4a2818','#6b4028'];
+  const ribbon = ['#e53935','#ffeb3b','#43a047','#8e24aa'][pose];
+  const hairColor = hairColors[pose];
+  let eyes = '<ellipse cx="42" cy="45" rx="2.5" ry="3.5" fill="#2a1810"/><ellipse cx="58" cy="45" rx="2.5" ry="3.5" fill="#2a1810"/><circle cx="43" cy="44" r="0.8" fill="white"/><circle cx="59" cy="44" r="0.8" fill="white"/>';
+  let mouth = '<path d="M46,55 Q50,59 54,55" stroke="#8b3a2f" stroke-width="1.5" fill="none" stroke-linecap="round"/>';
+  let arms='', ponytail='';
+  if (pose === 0) {
+    arms = '<path d="M35,65 Q30,45 40,25" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           '<path d="M65,65 Q78,75 82,90" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           pom(40,20) + pom(82,92);
+    ponytail = '<path d="M72,32 Q88,42 82,62 Q78,52 70,48 Z" fill="' + hairColor + '"/>';
+  } else if (pose === 1) {
+    arms = '<path d="M35,65 Q22,50 28,25" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           '<path d="M65,65 Q78,50 72,25" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           pom(28,20) + pom(72,20);
+  } else if (pose === 2) {
+    eyes = '<ellipse cx="42" cy="45" rx="2.5" ry="3.5" fill="#2a1810"/><path d="M55,45 Q58,42 61,45" stroke="#2a1810" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="43" cy="44" r="0.8" fill="white"/>';
+    mouth = '<path d="M44,54 Q50,60 56,54" stroke="#8b3a2f" stroke-width="1.5" fill="none" stroke-linecap="round"/>';
+    arms = '<path d="M35,65 Q22,80 20,100" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           '<path d="M65,65 Q80,55 85,45" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           pom(20,102) + pom(85,42);
+    ponytail = '<path d="M72,32 Q90,45 84,68 Q78,55 70,50 Z" fill="' + hairColor + '"/>';
+  } else {
+    arms = '<path d="M35,65 Q20,80 25,100" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           '<path d="M65,65 Q80,45 75,20" stroke="#fde0c8" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+           pom(25,102) + pom(75,18);
+  }
+  return '<svg viewBox="0 0 100 145" xmlns="http://www.w3.org/2000/svg">' +
+    '<ellipse cx="50" cy="38" rx="26" ry="28" fill="' + hairColor + '"/>' +
+    ponytail +
+    '<circle cx="50" cy="42" r="20" fill="#fde0c8"/>' +
+    '<path d="M32,35 Q40,22 50,20 Q60,22 68,35 Q65,26 50,24 Q35,26 32,35 Z" fill="' + hairColor + '"/>' +
+    '<path d="M40,26 L44,20 L48,26 Z" fill="' + ribbon + '"/>' +
+    '<path d="M60,26 L56,20 L52,26 Z" fill="' + ribbon + '"/>' +
+    '<circle cx="50" cy="24" r="2" fill="' + ribbon + '"/>' +
+    eyes +
+    '<circle cx="37" cy="51" r="2.5" fill="#ffb6c1" opacity="0.6"/>' +
+    '<circle cx="63" cy="51" r="2.5" fill="#ffb6c1" opacity="0.6"/>' +
+    mouth +
+    '<path d="M36,62 L30,100 L70,100 L64,62 Z" fill="#1e50a2"/>' +
+    '<path d="M42,62 L38,88 L50,86 L62,88 L58,62 Z" fill="white"/>' +
+    '<path d="M47,62 L45,86 L50,84 L55,86 L53,62 Z" fill="#d32f2f"/>' +
+    arms +
+    '<rect x="42" y="100" width="6" height="22" fill="#fde0c8"/>' +
+    '<rect x="52" y="100" width="6" height="22" fill="#fde0c8"/>' +
+    '<ellipse cx="45" cy="128" rx="6" ry="4" fill="white" stroke="#333" stroke-width="0.5"/>' +
+    '<ellipse cx="55" cy="128" rx="6" ry="4" fill="white" stroke="#333" stroke-width="0.5"/>' +
+    '</svg>';
+}
+
+// ===== State =====
+let state = {};
+function resetState() {
+  state = { questions:[], currentIdx:0, currentQ:null,
+    selectedChar:null, selectedSuit:null, selectedColor:null,
+    timerId:null, results:[], playing:false, answered:false };
+}
+function generateQuestions() {
+  return CHARS_TEXT.map(letter => ({
+    letter,
+    charIdx:  Math.floor(Math.random()*4),
+    suitIdx:  Math.floor(Math.random()*4),
+    colorIdx: Math.floor(Math.random()*4),
+  }));
+}
+
+// ===== Audio =====
+let audioCtx;
+function initAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, dur, type, vol, delay) {
+  if (!audioCtx) return;
+  setTimeout(() => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || 'sine'; osc.frequency.value = freq; gain.gain.value = vol || 0.15;
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.stop(audioCtx.currentTime + dur);
+  }, delay || 0);
+}
+function playCorrect() { playTone(880,0.12,'sine',0.2,0); playTone(1320,0.18,'sine',0.2,80); }
+function playWrong()   { playTone(220,0.15,'sawtooth',0.15,0); playTone(160,0.25,'sawtooth',0.15,90); }
+function playFanfare() {
+  const notes = [[523,0.2,0],[659,0.2,200],[784,0.2,400],[1046,0.35,600],[784,0.15,1100],[1046,0.6,1300]];
+  notes.forEach(n => playTone(n[0], n[1], 'square', 0.13, n[2]));
+}
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  // 読み上げからハートは除外
+  const cleanText = text.replace(/[\u2661\u2665\u2764\u2763]/g, '');
+  const u = new SpeechSynthesisUtterance(cleanText);
+  u.lang = 'ja-JP'; u.pitch = 1.8; u.rate = 1.15; u.volume = 1;
+  const voices = speechSynthesis.getVoices();
+  const jp = voices.find(v => v.lang && v.lang.indexOf('ja') === 0);
+  if (jp) u.voice = jp;
+  speechSynthesis.speak(u);
+}
+
+// ===== UI Build =====
+function buildChars() {
+  const area = document.getElementById('charArea');
+  area.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.className = 'char';
+    div.dataset.idx = i;
+    div.innerHTML = svgChar(i) + '<div class="charBadge">' + (i+1) + '</div>';
+    div.addEventListener('click', () => selectChar(i));
+    area.appendChild(div);
+  }
+}
+function buildCards() {
+  const suitRow = document.getElementById('suitRow'); suitRow.innerHTML = '';
+  SUITS.forEach((s, i) => {
+    const c = document.createElement('div');
+    c.className = 'card suit'; c.textContent = s;
+    c.addEventListener('click', () => selectSuit(i));
+    suitRow.appendChild(c);
+  });
+  const colorRow = document.getElementById('colorRow'); colorRow.innerHTML = '';
+  COLORS.forEach((col, i) => {
+    const c = document.createElement('div');
+    c.className = 'card color'; c.textContent = col.name;
+    c.style.background = col.value;
+    c.addEventListener('click', () => selectColor(i));
+    colorRow.appendChild(c);
+  });
+}
+function clearSelections() {
+  document.querySelectorAll('.char.selected,.card.selected').forEach(e => e.classList.remove('selected'));
+}
+function updateArrow() {
+  ['charArrow','suitArrow','colorArrow'].forEach(id => document.getElementById(id).classList.remove('active'));
+  if (!state.playing || state.answered) return;
+  if (state.selectedChar === null) {
+    document.getElementById('charArrow').classList.add('active');
+  } else if (state.selectedSuit === null) {
+    document.getElementById('suitArrow').classList.add('active');
+  } else if (state.selectedColor === null) {
+    document.getElementById('colorArrow').classList.add('active');
+  }
+}
+function selectChar(i) {
+  if (!state.playing || state.answered) return;
+  document.querySelectorAll('.char').forEach(e => e.classList.remove('selected'));
+  document.querySelectorAll('.char')[i].classList.add('selected');
+  state.selectedChar = i;
+  updateArrow();
+  checkAnswer();
+}
+function selectSuit(i) {
+  if (!state.playing || state.answered) return;
+  document.querySelectorAll('#suitRow .card').forEach(e => e.classList.remove('selected'));
+  document.querySelectorAll('#suitRow .card')[i].classList.add('selected');
+  state.selectedSuit = i;
+  updateArrow();
+  checkAnswer();
+}
+function selectColor(i) {
+  if (!state.playing || state.answered) return;
+  document.querySelectorAll('#colorRow .card').forEach(e => e.classList.remove('selected'));
+  document.querySelectorAll('#colorRow .card')[i].classList.add('selected');
+  state.selectedColor = i;
+  updateArrow();
+  checkAnswer();
+}
+
+// ===== Game Flow =====
+function checkAnswer() {
+  if (state.answered) return;
+  if (state.selectedChar === null || state.selectedSuit === null || state.selectedColor === null) return;
+  const q = state.currentQ;
+  const ok = state.selectedChar === q.charIdx && state.selectedSuit === q.suitIdx && state.selectedColor === q.colorIdx;
+  if (ok) handleCorrect(); else handleWrong();
+}
+function handleCorrect() {
+  if (state.answered) return;
+  state.answered = true;
+  clearTimeout(state.timerId);
+  updateArrow();
+  playCorrect();
+  state.results.push(true);
+  const targetChar = document.querySelectorAll('.char')[state.currentQ.charIdx];
+  // ★ チアダンス
+  targetChar.classList.add('cheer');
+  setTimeout(() => targetChar.classList.remove('cheer'), 950);
+  updateTextDisplay();
+  document.getElementById('iconArea').innerHTML = '';
+  state.currentIdx++;
+  setTimeout(nextQuestion, 900);
+}
+function handleWrong() {
+  if (state.answered) return;
+  state.answered = true;
+  clearTimeout(state.timerId);
+  updateArrow();
+  playWrong();
+  state.results.push(false);
+  const targetChar = document.querySelectorAll('.char')[state.currentQ.charIdx];
+  if (targetChar) {
+    targetChar.classList.add('droop');
+    setTimeout(() => targetChar.classList.remove('droop'), 500);
+  }
+  updateTextDisplay();
+  document.getElementById('iconArea').innerHTML = '';
+  state.currentIdx++;
+  setTimeout(nextQuestion, 800);
+}
+function updateTextDisplay() {
+  const disp = document.getElementById('textDisplay');
+  disp.innerHTML = '';
+  CHARS_TEXT.forEach((ch, i) => {
+    const s = document.createElement('span');
+    s.className = 'slot';
+    if (i < state.results.length && state.results[i]) {
+      // ★ ハートマークならSVGで描画
+      if (ch === HEART_MARK || ch === '\u2661') {
+        s.innerHTML = HEART_SVG;
+      } else {
+        s.textContent = ch;
+      }
+      s.classList.add('done');
+    } else {
+      s.innerHTML = '&nbsp;';
+    }
+    disp.appendChild(s);
+  });
+}
+function showIcon() {
+  const iconArea = document.getElementById('iconArea');
+  iconArea.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.className = 'iconSlot';
+    if (i === state.currentQ.charIdx) {
+      div.textContent = SUITS[state.currentQ.suitIdx];
+      div.style.color = COLORS[state.currentQ.colorIdx].value;
+      div.classList.add('active');
+    }
+    iconArea.appendChild(div);
+  }
+}
+function startTimer() {
+  const bar = document.getElementById('timerBar');
+  bar.style.transition = 'none'; bar.style.width = '100%';
+  void bar.offsetWidth;
+  bar.style.transition = 'width ' + TIME_LIMIT_MS + 'ms linear';
+  bar.style.width = '0%';
+  state.timerId = setTimeout(() => {
+    if (state.playing && !state.answered) handleWrong();
+  }, TIME_LIMIT_MS);
+}
+function nextQuestion() {
+  if (state.currentIdx >= state.questions.length) { endGame(); return; }
+  state.currentQ = state.questions[state.currentIdx];
+  state.selectedChar = state.selectedSuit = state.selectedColor = null;
+  state.answered = false;
+  clearSelections();
+  showIcon();
+  updateArrow();
+  startTimer();
+}
+function startGame() {
+  initAudio();
+  resetState();
+  state.questions = generateQuestions();
+  state.playing = true;
+  document.getElementById('startBtn').classList.add('hidden');
+  hideOverlay();
+  resetCharPositions();
+  updateTextDisplay();
+  nextQuestion();
+}
+function resetCharPositions() {
+  document.querySelectorAll('.char').forEach(c => {
+    c.style.transition = 'transform 0.4s';
+    c.style.transform = '';
+  });
+}
+function showTower() {
+  const chars = document.querySelectorAll('.char');
+  if (chars.length < 4) return;
+  const r1 = chars[1].getBoundingClientRect();
+  const r3 = chars[3].getBoundingClientRect();
+  const dx = r1.left - r3.left;
+  const dy = r1.top - r3.top - r1.height + 8;
+  chars[3].style.transition = 'transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  chars[3].style.transform = 'translate(' + dx + 'px, ' + dy + 'px) scale(0.9)';
+}
+function endGame() {
+  state.playing = false;
+  document.getElementById('iconArea').innerHTML = '';
+  updateArrow();
+  const bar = document.getElementById('timerBar');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  const allCorrect = state.results.every(r => r);
+  const cnt = state.results.filter(r => r).length;
+  if (allCorrect) {
+    playFanfare();
+    showTower();
+    setTimeout(() => speak(TARGET), 1800);
+    setTimeout(() => showResultOverlay(true, cnt), 4800);
+  } else {
+    setTimeout(() => showResultOverlay(false, cnt), 400);
+  }
+}
+function showResultOverlay(allCorrect, count) {
+  const overlay = document.getElementById('overlay');
+  const heartInline = '<span style="display:inline-block;width:16px;height:16px;vertical-align:-3px;">' + HEART_SVG + '</span>';
+  const html = '<h2>' + (allCorrect ? 'ぜんもんせいかい！' : 'おつかれさま！') + '</h2>' +
+    '<p style="font-size:14px;">' +
+    (allCorrect ? 'みのわのみんな、だいすきです' + heartInline : count + ' / ' + CHARS_TEXT.length + ' もじ せいかい！') +
+    '</p><button id="retryBtn">もう1度挑戦</button>';
+  document.getElementById('overlayContent').innerHTML = html;
+  overlay.classList.add('show');
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    hideOverlay(); startGame();
+  });
+}
+function hideOverlay() { document.getElementById('overlay').classList.remove('show'); }
+
+// ===== Init =====
+buildChars();
+buildCards();
+document.getElementById('startBtn').addEventListener('click', startGame);
+if ('speechSynthesis' in window) {
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+}
+</script>
+</body>
+</html>
