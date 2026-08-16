@@ -21,12 +21,14 @@
     --white:#FFFDF8;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
-  html,body{margin:0;padding:0;height:100%;}
+  html,body{margin:0;padding:0;height:100%;max-width:100%;overflow-x:hidden;}
+  *{min-width:0;}
   body{
     font-family:'Hiragino Maru Gothic ProN','Rounded Mplus 1c','Yu Gothic Rounded','Meiryo','Hiragino Sans',sans-serif;
     color:var(--brown);
     min-height:100vh;
     min-height:100dvh;
+    width:100%;
     display:flex;
     justify-content:center;
     overflow-x:hidden;
@@ -68,6 +70,8 @@
     display:flex;
     flex-direction:column;
     padding:clamp(8px,2.4vw,14px);
+    overflow-x:hidden;
+    box-sizing:border-box;
   }
 
   .topbar{flex:0 0 auto;text-align:center;padding:2px 2px 6px;}
@@ -114,14 +118,18 @@
     padding:clamp(12px,3.6vw,20px) clamp(12px,3.6vw,18px) clamp(10px,3vw,16px);
     box-shadow:0 8px 0 rgba(0,0,0,0.15), 0 12px 20px rgba(0,0,0,0.15);
     min-height:0;
-    overflow:auto;
+    max-width:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
     position:relative;
+    box-sizing:border-box;
   }
   .stage-inner{
     flex:1 1 auto;
     display:flex;
     flex-direction:column;
     justify-content:center;
+    min-width:0;
     min-height:0;
   }
 
@@ -226,24 +234,26 @@
   }
   .pick-hint{text-align:center;font-size:clamp(11.5px,3.2vw,13px);font-weight:800;color:var(--red-deep);margin:8px 0 2px;}
 
-  .explain-list{display:flex;flex-direction:column;gap:7px;}
+  .explain-list{display:flex;flex-direction:column;gap:7px;min-width:0;}
   .explain-card{
     background:var(--wood1);border-radius:14px;padding:8px 12px;
     border-left:5px solid #d8c19a;
+    box-sizing:border-box;
+    max-width:100%;
   }
   .explain-card.chosen{background:#DFF3E5;border-left:5px solid var(--green);}
   .explain-card.miss{background:#FFF1D6;border-left:5px solid var(--yellow);}
   .explain-card.wrongpick{background:#FBE1DE;border-left:5px solid var(--red);}
-  .explain-head{display:flex;align-items:center;gap:7px;}
-  .explain-head .emoji{font-size:clamp(17px,5vw,21px);}
+  .explain-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;row-gap:4px;}
+  .explain-head .emoji{font-size:clamp(17px,5vw,21px);flex-shrink:0;}
   .explain-head .name{font-size:clamp(12px,3.4vw,13.5px);font-weight:900;}
   .explain-head .tag{
     margin-left:auto;background:var(--green);color:#fff;font-size:10px;font-weight:800;
-    padding:2px 8px;border-radius:999px;flex-shrink:0;white-space:nowrap;
+    padding:2px 8px;border-radius:999px;flex-shrink:0;white-space:normal;text-align:center;
   }
   .explain-head .tag.miss{background:var(--yellow);color:#6b4c00;}
   .explain-head .tag.wrong{background:var(--red);}
-  .explain-text{font-size:clamp(10.5px,2.9vw,12px);line-height:1.5;color:#7a6650;margin-top:3px;}
+  .explain-text{font-size:clamp(10.5px,2.9vw,12px);line-height:1.5;color:#7a6650;margin-top:3px;overflow-wrap:break-word;}
 
   .track-wrap{padding:2px 2px;flex:0 0 auto;}
   .track{
@@ -874,7 +884,7 @@
 
     root.innerHTML =
       '<div class="ribbon">'+esc(scenario.title)+' の解説</div>'+
-      '<div class="stage-inner" style="overflow:auto;">'+
+      '<div class="stage-inner" style="overflow-y:auto;overflow-x:hidden;">'+
         '<div class="explain-list">'+cardsHtml+'</div>'+
       '</div>'+
       '<div class="btn-row"><button class="big-btn" id="foodNextBtn">'+(isLast ? 'つぎのステージへ ▶' : 'つぎの問題へ ▶')+'</button></div>';
@@ -975,7 +985,7 @@
 
     root.innerHTML =
       '<div class="ribbon">'+esc(scenario.title)+' の解説</div>'+
-      '<div class="stage-inner" style="overflow:auto;">'+
+      '<div class="stage-inner" style="overflow-y:auto;overflow-x:hidden;">'+
         '<div class="explain-list">'+cardsHtml+'</div>'+
       '</div>'+
       '<div class="btn-row"><button class="big-btn" id="nightNextBtn">'+(isLast ? '朝をむかえる ▶' : 'つぎの問題へ ▶')+'</button></div>';
